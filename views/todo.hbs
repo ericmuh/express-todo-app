@@ -1,0 +1,12 @@
+<h1>TODO APP</h1>
+<form action="/todos" method="post">
+    <input type="text" name="todo">
+    <input type="submit" value="Add todo">
+</form>
+
+<ul>
+    {{#each todos}}
+    <li><span> {{this.id}}- </span>{{this.name}}<span></span></li>
+    {{/each}}
+
+</ul>
