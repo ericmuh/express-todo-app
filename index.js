@@ -23,7 +23,8 @@ app.set("view engine", "hbs");
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
-// route rendering out out template todo.hbs //*GET TODOS: READ
+// route rendering out out template todo.hbs
+//*GET TODOS: READ
 app.get("/todos", (req, res) => {
   MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
     assert.equal(null, err);
@@ -36,13 +37,11 @@ app.get("/todos", (req, res) => {
         assert.equal(null, err);
         console.log(data);
         res.render("todo", { todos: data });
-
         client.close();
       });
   });
-});
 
-//! CRUD -create Read Update and Delete
+});
 
 //* POST TODOs : CREATE
 app.post("/todos", (req, res) => {
@@ -52,8 +51,18 @@ app.post("/todos", (req, res) => {
     name: req.body.todo,
     completed: true,
   };
-  todostore.push(todo);
-  res.redirect("/todos");
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    assert.equal(null, err);
+    console.log("Connected successfully to server");
+    const db = client.db("todoapp");
+    const todos = db.collection("todos").insertOne(todo).then(()=>{
+      res.redirect("/todos")
+      client.close();
+    }).catch(
+      error=>console.log(error)
+    )
+    
+  });
 });
 
 // *API ENDPOINT
@@ -62,3 +71,9 @@ app.use("/api/todos", require("./routes/api/todos"));
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
+
+
+
+// ORM : object Relational Mapper
+
+// ODM : Object Document Mapper : mongoose
