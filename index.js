@@ -1,15 +1,33 @@
 const express = require("express");
 const ehbs = require("express-handlebars");
-const MongoClient = require("mongodb").MongoClient;
+const mongoose = require("mongoose");
 const assert = require("assert");
-
-// Connection URL
-const url = "mongodb://localhost:27017";
+const todoController = require("./controllers/todo");
 
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 3000;
-// connecting to mongodb using mongodbClient driver
+
+// *connecting to mongodb database using mongoose
+
+// Connection URL
+const url = "mongodb://localhost:27017/todoapp";
+
+// asynchronous : promise
+mongoose
+  .connect(url, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true,
+  })
+  .then(() => {
+    console.log("Server connected");
+    app.listen(port, () => {
+      console.log(`Example app listening at http://localhost:${port}`);
+    });
+  })
+  .catch((error) => console.log(error));
 
 //* Body parser middleware
 app.use(express.json());
@@ -25,54 +43,13 @@ app.get("/", (req, res) => {
 });
 // route rendering out out template todo.hbs
 //*GET TODOS: READ
-app.get("/todos", (req, res) => {
-  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
-    assert.equal(null, err);
-    console.log("Connected successfully to server");
-    const db = client.db("todoapp");
-    const todos = db
-      .collection("todos")
-      .find()
-      .toArray((err, data) => {
-        assert.equal(null, err);
-        console.log(data);
-        res.render("todo", { todos: data });
-        client.close();
-      });
-  });
-
-});
+app.get("/todos", todoController.getTodo);
 
 //* POST TODOs : CREATE
-app.post("/todos", (req, res) => {
-  console.log(req.body);
-  const todo = {
-    id: 3,
-    name: req.body.todo,
-    completed: true,
-  };
-  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
-    assert.equal(null, err);
-    console.log("Connected successfully to server");
-    const db = client.db("todoapp");
-    const todos = db.collection("todos").insertOne(todo).then(()=>{
-      res.redirect("/todos")
-      client.close();
-    }).catch(
-      error=>console.log(error)
-    )
-    
-  });
-});
+app.post("/todos", todoController.postTodo);
 
 // *API ENDPOINT
 app.use("/api/todos", require("./routes/api/todos"));
-
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
-});
-
-
 
 // ORM : object Relational Mapper
 
